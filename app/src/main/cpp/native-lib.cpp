@@ -45,7 +45,30 @@ SLEngineItf CreateSL()
     return en;
 }
 
+void PcmCall(SLAndroidSimpleBufferQueueItf bf,void *contex)
+{
+    LOGD("PcmCall");
+    static FILE *fp = NULL;
+    static char *buf = NULL;
+    if(!buf)
+    {
+        buf = new char[1024*1024];
+    }
+    if(!fp)
+    {
+        fp = fopen("/sdcard/test.pcm","rb");
+    }
+    if(!fp)return;
+    if(feof(fp) == 0)
+    {
+        int len = fread(buf,1,1024,fp);
+        if(len > 0)
+            (*bf)->Enqueue(bf,buf,len);
+    }
 
+
+
+}
 
 extern "C"
 JNIEXPORT jstring
@@ -96,9 +119,40 @@ Java_aplay_testopensl_MainActivity_stringFromJNI(
     SLDataSource ds = {&que,&pcm};
 
 
+    //4 创建播放器
+    SLObjectItf player = NULL;
+    SLPlayItf iplayer = NULL;
+    SLAndroidSimpleBufferQueueItf pcmQue = NULL;
+    const SLInterfaceID ids[] = {SL_IID_BUFFERQUEUE};
+    const SLboolean req[] = {SL_BOOLEAN_TRUE};
+    re = (*eng)->CreateAudioPlayer(eng,&player,&ds,&audioSink,sizeof(ids)/sizeof(SLInterfaceID),ids,req);
+    if(re !=SL_RESULT_SUCCESS )
+    {
+        LOGD("CreateAudioPlayer failed!");
+    } else{
+        LOGD("CreateAudioPlayer success!");
+    }
+    (*player)->Realize(player,SL_BOOLEAN_FALSE);
+    //获取player接口
+    re = (*player)->GetInterface(player,SL_IID_PLAY,&iplayer);
+    if(re !=SL_RESULT_SUCCESS )
+    {
+        LOGD("GetInterface SL_IID_PLAY failed!");
+    }
+    re = (*player)->GetInterface(player,SL_IID_BUFFERQUEUE,&pcmQue);
+    if(re !=SL_RESULT_SUCCESS )
+    {
+        LOGD("GetInterface SL_IID_BUFFERQUEUE failed!");
+    }
 
+    //设置回调函数，播放队列空调用
+    (*pcmQue)->RegisterCallback(pcmQue,PcmCall,0);
 
+    //设置为播放状态
+    (*iplayer)->SetPlayState(iplayer,SL_PLAYSTATE_PLAYING);
 
+    //启动队列回调
+    (*pcmQue)->Enqueue(pcmQue,"",1);
 
     return env->NewStringUTF(hello.c_str());
 }
