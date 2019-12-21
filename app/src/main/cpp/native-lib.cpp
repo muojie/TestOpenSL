@@ -30,7 +30,7 @@
 #include <android/log.h>
 #define LOGD(FORMAT,...) __android_log_print(ANDROID_LOG_ERROR,"ywl5320",FORMAT,##__VA_ARGS__);
 
-
+//1 创建引擎
 static SLObjectItf  engineSL = NULL;
 SLEngineItf CreateSL()
 {
@@ -45,6 +45,8 @@ SLEngineItf CreateSL()
     return en;
 }
 
+
+
 extern "C"
 JNIEXPORT jstring
 
@@ -56,14 +58,29 @@ Java_aplay_testopensl_MainActivity_stringFromJNI(
 
     //1 创建引擎
     SLEngineItf eng = CreateSL();
-    if(eng)
-    {
+    if(eng){
         LOGD("CreateSL success！ ");
-    }
-    else
-    {
+    }else{
         LOGD("CreateSL failed！ ");
     }
+
+   //2 创建混音器
+    SLObjectItf mix = NULL;
+    SLresult re = 0;
+    re = (*eng)->CreateOutputMix(eng,&mix,0,0,0);
+    if(re !=SL_RESULT_SUCCESS )
+    {
+        LOGD("SL_RESULT_SUCCESS failed!");
+    }
+    re = (*mix)->Realize(mix,SL_BOOLEAN_FALSE);
+    if(re !=SL_RESULT_SUCCESS )
+    {
+        LOGD("(*mix)->Realize failed!");
+    }
+    SLDataLocator_OutputMix outmix = {SL_DATALOCATOR_OUTPUTMIX,mix};
+    SLDataSink audioSink= {&outmix,0};
+
+
 
 
 
