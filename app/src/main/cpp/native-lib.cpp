@@ -80,6 +80,21 @@ Java_aplay_testopensl_MainActivity_stringFromJNI(
     SLDataLocator_OutputMix outmix = {SL_DATALOCATOR_OUTPUTMIX,mix};
     SLDataSink audioSink= {&outmix,0};
 
+    //3 配置音频信息
+    //缓冲队列
+    SLDataLocator_AndroidSimpleBufferQueue que = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,10};
+    //音频格式
+    SLDataFormat_PCM pcm = {
+            SL_DATAFORMAT_PCM,
+            2,//    声道数
+            SL_SAMPLINGRATE_44_1,
+            SL_PCMSAMPLEFORMAT_FIXED_16,
+            SL_PCMSAMPLEFORMAT_FIXED_16,
+            SL_SPEAKER_FRONT_LEFT|SL_SPEAKER_FRONT_RIGHT,
+            SL_BYTEORDER_LITTLEENDIAN //字节序，小端
+    };
+    SLDataSource ds = {&que,&pcm};
+
 
 
 
